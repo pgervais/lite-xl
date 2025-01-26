@@ -50,6 +50,9 @@ jobs:
           if [[ `git describe --exact-match --match v[0-9]* HEAD --tags` ]]; then
             echo "release=$REF" >> $GITHUB_OUTPUT
             echo "Release Version: $REF"
+          elif [[ `git rev-parse --abbrev-ref HEAD` == *"-preview" ]]; then
+            echo "release=`git rev-parse --abbrev-ref HEAD`" >> $GITHUB_OUTPUT
+            echo "Release Version: `git rev-parse --abbrev-ref HEAD`"
           fi
           
   build_darwin:
