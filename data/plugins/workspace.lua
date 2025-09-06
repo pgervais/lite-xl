@@ -56,7 +56,7 @@ local function save_view(view)
   if mt == DocView then
     return {
       type = "doc",
-      active = (core.active_view == view),
+      active = (view.root_view.active_view == view),
       filename = view.doc.filename,
       selection = { view:get_selection() },
       scroll = { x = view.scroll.to.x, y = view.scroll.to.y },
@@ -69,7 +69,7 @@ local function save_view(view)
     if mod == mt then
       return {
         type = "view",
-        active = (core.active_view == view),
+        active = (view.root_view.active_view == view),
         module = name,
         scroll = { x = view.scroll.to.x, y = view.scroll.to.y, to = { x = view.scroll.to.x, y = view.scroll.to.y } },
       }
@@ -172,27 +172,29 @@ end
 
 
 local function save_workspace()
-  local project_dir = common.basename(core.root_project().path)
-  local id_list = {}
-  for filename, id in workspace_keys_for(project_dir) do
-    id_list[id] = true
+  if core.root_project() then
+    local project_dir = common.basename(core.root_project().path)
+    local id_list = {}
+    for filename, id in workspace_keys_for(project_dir) do
+      id_list[id] = true
+    end
+    local id = 1
+    while id_list[id] do
+      id = id + 1
+    end
+    local root = get_unlocked_root(core.windows[1].root_view.root_node)
+    storage.save(STORAGE_MODULE, project_dir .. "-" .. id, { path = core.root_project().path, documents = save_node(root), directories = save_directories() })
   end
-  local id = 1
-  while id_list[id] do
-    id = id + 1
-  end
-  local root = get_unlocked_root(core.root_view.root_node)
-  storage.save(STORAGE_MODULE, project_dir .. "-" .. id, { path = core.root_project().path, documents = save_node(root), directories = save_directories() })
 end
 
 
 local function load_workspace()
   local workspace = consume_workspace(core.root_project().path)
   if workspace then
-    local root = get_unlocked_root(core.root_view.root_node)
+    local root = get_unlocked_root(core.windows[1].root_view.root_node)
     local active_view = load_node(root, workspace.documents)
     if active_view then
-      core.set_active_view(active_view)
+      core.active_window().root_view:set_active_view(active_view)
     end
     for i, dir_name in ipairs(workspace.directories) do
       core.add_project(system.absolute_path(dir_name))
@@ -216,7 +218,7 @@ function core.run(...)
     end
     local exit = core.exit
     function core.exit(quit_fn, force)
-      if force then core.try(save_workspace) end
+      core.try(save_workspace)
       exit(quit_fn, force)
     end
     

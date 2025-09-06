@@ -7,6 +7,7 @@ local translate = require "core.doc.translate"
 local Doc = require "core.doc"
 local ime = require "core.ime"
 local View = require "core.view"
+local ContextMenu = require "core.contextmenu"
 
 ---@class core.docview : core.view
 ---@field super core.view
@@ -432,7 +433,7 @@ end
 function DocView:try_close(do_close)
   if self.doc:is_dirty()
   and #core.get_views_referencing_doc(self.doc) == 1 then
-    core.command_view:enter("Unsaved Changes; Confirm Close", {
+    self.root_view.command_view:enter("Unsaved Changes; Confirm Close", {
       submit = function(_, item)
         if item.text:match("^[cC]") then
           do_close()
@@ -822,7 +823,7 @@ function DocView:update()
   local line1, col1, line2, col2 = self:get_selection()
   if (line1 ~= self.last_line1 or col1 ~= self.last_col1 or
       line2 ~= self.last_line2 or col2 ~= self.last_col2) and self.size.x > 0 then
-    if core.active_view == self and not ime.editing then
+    if self.root_view.active_view == self and not ime.editing then
       self:scroll_to_make_visible(line1, col1)
     end
     core.blink_reset()
@@ -831,7 +832,7 @@ function DocView:update()
   end
 
   -- update blink timer
-  if not config.disable_blink and system.window_has_focus(core.window) and self == core.active_view and not self.mouse_selecting then
+  if not config.disable_blink and self.root_view.window:has_focus() and self == self.root_view.window.active_view and not self.mouse_selecting then
     local T, t0 = config.blink_period, core.blink_start
     local ta, tb = core.blink_timer, system.get_time()
     if ((tb - t0) % T < T / 2) ~= ((ta - t0) % T < T / 2) then
@@ -878,9 +879,9 @@ end
 
 function DocView:draw_line(vline, x, y)
   local gw, gpad = self:get_gutter_width()
-  core.push_clip_rect(self.position.x + gw, self.position.y, self.size.x - gw, self.size.y)
+  self.root_view.window:push_clip_rect(self.position.x + gw, self.position.y, self.size.x - gw, self.size.y)
   self:draw_line_body(vline, x + gw - self.scroll.x, y)
-  core.pop_clip_rect()
+  self.root_view.window:pop_clip_rect()
   self:draw_line_gutter(vline, x, y, gpad and gw - gpad or gw)
   return self:get_line_height()
 end
@@ -903,7 +904,7 @@ function DocView:draw_line_body(vline, x, y)
       end
     end
   end
-  if draw_highlight and core.active_view == self then
+  if draw_highlight and self.root_view.active_view == self then
     self:draw_line_highlight(x + self.scroll.x, y)
   end
   
@@ -967,11 +968,13 @@ function DocView:draw_ime_decoration(line1, col1, line2, col2)
 end
 
 function DocView:draw_overlay()
-  if core.active_view == self then
+  if self.root_view.active_view == self then
+    local minline, maxline = self:get_visible_line_range()
     -- draw caret if it overlaps this line
     local T = config.blink_period
     for _, line1, col1, line2, col2 in self:get_selections() do
-      if system.window_has_focus(core.window) then
+      if line1 >= minline and line1 <= maxline
+      and self.root_view.window.renwindow:has_focus() then
         if ime.editing then
           self:draw_ime_decoration(line1, col1, line2, col2)
         else
@@ -1508,5 +1511,15 @@ function DocView:position_offset_byte(line, col, offset)
   end
 end
 
+function DocView:on_context_menu()
+  return { items = {
+    { text = "Cut",     command = "doc:cut" },
+    { text = "Copy",    command = "doc:copy" },
+    { text = "Paste",   command = "doc:paste" },
+    ContextMenu.DIVIDER,
+    { text = "Find",    command = "find-replace:find"    },
+    { text = "Replace", command = "find-replace:replace" }
+  } }, self
+end
 
 return DocView
