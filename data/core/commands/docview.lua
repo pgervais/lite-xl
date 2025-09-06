@@ -8,12 +8,12 @@ local DocView = require "core.docview"
 local tokenizer = require "core.tokenizer"
 
 
-local function doc()
-  return core.active_view.doc
+local function doc(rv)
+  return rv.active_view.doc
 end
 
-local function docview()
-  return core.active_view
+local function docview(rv)
+  return rv.active_view
 end
 
 local function append_line_if_last_line(line)
@@ -22,13 +22,13 @@ local function append_line_if_last_line(line)
   end
 end
 
-local function doc_multiline_selections(sort)
-  local iter, state, idx, line1, col1, line2, col2 = docview():get_selections(sort)
+local function doc_multiline_selections(dv, sort)
+  local iter, state, idx, line1, col1, line2, col2 = dv:get_selections(sort)
   return function()
     idx, line1, col1, line2, col2 = iter(state, idx)
     if idx and line2 > line1 and col2 == 1 then
       line2 = line2 - 1
-      col2 = #docview().doc.lines[line2]
+      col2 = #dv.doc.lines[line2]
     end
     return idx, line1, col1, line2, col2
   end
@@ -251,7 +251,7 @@ local write_commands = {
   end,
 
   ["docview:indent"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       local l1, c1, l2, c2 = dv:indent_text(false, line1, col1, line2, col2)
       if l1 then
         dv:set_selections(idx, l1, c1, l2, c2)
@@ -260,7 +260,7 @@ local write_commands = {
   end,
 
   ["docview:unindent"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       local l1, c1, l2, c2 = dv:indent_text(true, line1, col1, line2, col2)
       if l1 then
         dv:set_selections(idx, l1, c1, l2, c2)
@@ -269,7 +269,7 @@ local write_commands = {
   end,
 
   ["docview:duplicate-lines"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       append_line_if_last_line(line2)
       local text = doc():get_text(line1, 1, line2 + 1, 1)
       dv.doc:insert(line2 + 1, 1, text)
@@ -279,7 +279,7 @@ local write_commands = {
   end,
 
   ["docview:delete-lines"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       append_line_if_last_line(line2)
       dv.doc:remove(line1, 1, line2 + 1, 1)
       dv:set_selections(idx, line1, col1)
@@ -287,7 +287,7 @@ local write_commands = {
   end,
 
   ["docview:move-lines-up"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       append_line_if_last_line(line2)
       if line1 > 1 then
         local text = doc().lines[line1 - 1]
@@ -299,7 +299,7 @@ local write_commands = {
   end,
 
   ["docview:move-lines-down"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       append_line_if_last_line(line2 + 1)
       if line2 < #dv.doc.lines then
         local text = dv.doc.lines[line2 + 1]
@@ -311,7 +311,7 @@ local write_commands = {
   end,
 
   ["docview:toggle-block-comments"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       local current_syntax = dv.doc.syntax
       if line1 > 1 then
         -- Use the previous line state, as it will be the state
@@ -343,7 +343,7 @@ local write_commands = {
   end,
 
   ["docview:toggle-line-comments"] = function(dv)
-    for idx, line1, col1, line2, col2 in doc_multiline_selections(true) do
+    for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
       local current_syntax = dv.doc.syntax
       if line1 > 1 then
         -- Use the previous line state, as it will be the state
@@ -466,9 +466,9 @@ local read_commands = {
 
 }
 
-command.add(function(x, y)
-  if x == nil or y == nil or not core.active_view:extends(DocView) then return false end
-  local dv = core.active_view
+command.add(function(rv, x, y)
+  if x == nil or y == nil or not rv.active_view:extends(DocView) then return false end
+  local dv = rv.active_view
   local x1,y1,x2,y2 = dv.position.x, dv.position.y, dv.position.x + dv.size.x, dv.position.y + dv.size.y
   return x >= x1 + dv:get_gutter_width() and x < x2 and y >= y1 and y < y2, dv, x, y
 end, {
@@ -549,5 +549,5 @@ read_commands["docview:move-to-next-char"] = function(dv)
   dv:merge_cursors()
 end
 
-command.add(function() return core.active_view:extends(DocView) and not core.active_view.read_only, core.active_view end, write_commands)
+command.add(function(rv) return rv.active_view:extends(DocView) and not rv.active_view.read_only, rv.active_view end, write_commands)
 command.add("core.docview", read_commands)
