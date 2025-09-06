@@ -16,9 +16,9 @@ local function docview(rv)
   return rv.active_view
 end
 
-local function append_line_if_last_line(line)
-  if line >= #doc().lines then
-    doc():insert(line, math.huge, "\n")
+local function append_line_if_last_line(dv, line)
+  if line >= #dv.doc.lines then
+    dv:insert(line, math.huge, "\n")
   end
 end
 
@@ -93,7 +93,7 @@ local function set_cursor(dv, x, y, snap_type)
   local line, col = dv:resolve_screen_position(x, y)
   dv:set_selection(line, col, line, col)
   if snap_type == "word" or snap_type == "lines" then
-    command.perform("docview:select-" .. snap_type)
+    command.perform("docview:select-" .. snap_type, dv.root_view)
   end
   dv.mouse_selecting = { line, col, snap_type }
   core.blink_reset()
@@ -270,7 +270,7 @@ local write_commands = {
 
   ["docview:duplicate-lines"] = function(dv)
     for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
-      append_line_if_last_line(line2)
+      append_line_if_last_line(dv, line2)
       local text = doc():get_text(line1, 1, line2 + 1, 1)
       dv.doc:insert(line2 + 1, 1, text)
       local n = line2 - line1 + 1
@@ -280,7 +280,7 @@ local write_commands = {
 
   ["docview:delete-lines"] = function(dv)
     for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
-      append_line_if_last_line(line2)
+      append_line_if_last_line(dv, line2)
       dv.doc:remove(line1, 1, line2 + 1, 1)
       dv:set_selections(idx, line1, col1)
     end
@@ -288,7 +288,7 @@ local write_commands = {
 
   ["docview:move-lines-up"] = function(dv)
     for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
-      append_line_if_last_line(line2)
+      append_line_if_last_line(dv, line2)
       if line1 > 1 then
         local text = doc().lines[line1 - 1]
         dv.doc:insert(line2 + 1, 1, text)
@@ -300,7 +300,7 @@ local write_commands = {
 
   ["docview:move-lines-down"] = function(dv)
     for idx, line1, col1, line2, col2 in doc_multiline_selections(dv, true) do
-      append_line_if_last_line(line2 + 1)
+      append_line_if_last_line(dv, line2 + 1)
       if line2 < #dv.doc.lines then
         local text = dv.doc.lines[line2 + 1]
         dv.doc:remove(line2 + 1, 1, line2 + 2, 1)
@@ -398,7 +398,7 @@ local read_commands = {
 
   ["docview:select-lines"] = function(dv)
     for idx, line1, _, line2 in dv:get_selections(true) do
-      append_line_if_last_line(line2)
+      append_line_if_last_line(dv, line2)
       dv:set_selections(idx, line2 + 1, 1, line1, 1)
     end
   end,

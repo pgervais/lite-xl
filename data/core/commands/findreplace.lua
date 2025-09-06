@@ -158,8 +158,8 @@ local function is_in_selection(line, col, l1, c1, l2, c2)
   return true
 end
 
-local function is_in_any_selection(line, col)
-  for idx, l1, c1, l2, c2 in dv():get_selections(true, false) do
+local function is_in_any_selection(dv, line, col)
+  for idx, l1, c1, l2, c2 in dv:get_selections(true, false) do
     if is_in_selection(line, col, l1, c1, l2, c2) then return true end
   end
   return false
@@ -175,7 +175,7 @@ local function select_add_next(dv, all)
     repeat
       l1, c1, l2, c2 = search.find(doc(dv.root_view), l2, c2, text, { wrap = true })
       if l1 == il1 and c1 == ic1 then break end
-      if l2 and not is_in_any_selection(l2, c2) then
+      if l2 and not is_in_any_selection(dv, l2, c2) then
         dv:add_selection(l2, c2, l1, c1)
         if not all then
           dv:scroll_to_make_visible(l2, c2)
