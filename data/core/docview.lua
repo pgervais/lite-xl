@@ -832,7 +832,7 @@ function DocView:update()
   end
 
   -- update blink timer
-  if not config.disable_blink and self.root_view.window:has_focus() and self == self.root_view.window.active_view and not self.mouse_selecting then
+  if not config.disable_blink and self.root_view.window:has_focus() and self == self.root_view.active_view and not self.mouse_selecting then
     local T, t0 = config.blink_period, core.blink_start
     local ta, tb = core.blink_timer, system.get_time()
     if ((tb - t0) % T < T / 2) ~= ((ta - t0) % T < T / 2) then
@@ -968,13 +968,12 @@ function DocView:draw_ime_decoration(line1, col1, line2, col2)
 end
 
 function DocView:draw_overlay()
-  if self.root_view.active_view == self then
+  if self.root_view.active_view == self and self.root_view.window.renwindow:has_focus() then
     local minline, maxline = self:get_visible_line_range()
     -- draw caret if it overlaps this line
     local T = config.blink_period
     for _, line1, col1, line2, col2 in self:get_selections() do
-      if line1 >= minline and line1 <= maxline
-      and self.root_view.window.renwindow:has_focus() then
+      if line1 >= minline and line1 <= maxline then
         if ime.editing then
           self:draw_ime_decoration(line1, col1, line2, col2)
         else

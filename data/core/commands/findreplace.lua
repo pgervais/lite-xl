@@ -61,8 +61,8 @@ end
 
 
 local function find(dv, label, search_fn)
-  last_view, last_sel = dv.active_view,
-    { dv.active_view:get_selection() }
+  last_view, last_sel = dv.root_view.active_view,
+    { dv.root_view.active_view:get_selection() }
   local text = last_view.doc:get_text(table.unpack(last_sel))
   found_expression = false
 

@@ -34,38 +34,38 @@ local function doc_multiline_selections(dv, sort)
   end
 end
 
-local function cut_or_copy(delete)
+local function cut_or_copy(dv, delete)
   local full_text = ""
   local text = ""
   core.cursor_clipboard = {}
   core.cursor_clipboard_whole_line = {}
-  for idx, line1, col1, line2, col2 in docview():get_selections(true, true) do
+  for idx, line1, col1, line2, col2 in dv:get_selections(true, true) do
     if line1 ~= line2 or col1 ~= col2 then
-      text = doc():get_text(line1, col1, line2, col2)
+      text = dv.doc:get_text(line1, col1, line2, col2)
       full_text = full_text == "" and text or (text .. " " .. full_text)
       core.cursor_clipboard_whole_line[idx] = false
       if delete then
-        docview():delete_to_cursor(idx, 0)
+        dv:delete_to_cursor(idx, 0)
       end
     else -- Cut/copy whole line
       -- Remove newline from the text. It will be added as needed on paste.
-      text = string.sub(doc().lines[line1], 1, -2)
+      text = string.sub(dv.doc.lines[line1], 1, -2)
       full_text = full_text == "" and text .. "\n" or (text .. "\n" .. full_text)
       core.cursor_clipboard_whole_line[idx] = true
       if delete then
-        if line1 < #doc().lines then
-          doc():remove(line1, 1, line1 + 1, 1)
-        elseif #doc().lines == 1 then
-          doc():remove(line1, 1, line1, math.huge)
+        if line1 < #dv.doc.lines then
+          dv:remove(line1, 1, line1 + 1, 1)
+        elseif #dv.doc.lines == 1 then
+          dv:remove(line1, 1, line1, math.huge)
         else
-          doc():remove(line1 - 1, math.huge, line1, math.huge)
+          dv:remove(line1 - 1, math.huge, line1, math.huge)
         end
-        docview():set_selections(idx, line1, col1, line2, col2)
+        dv:set_selections(idx, line1, col1, line2, col2)
       end
     end
     core.cursor_clipboard[idx] = text
   end
-  if delete then docview():merge_cursors() end
+  if delete then dv:merge_cursors() end
   core.cursor_clipboard["full"] = full_text
   system.set_clipboard(full_text)
 end
@@ -117,8 +117,8 @@ local function insert_paste(dv, value, whole_line, idx)
 end
 
 local write_commands = {
-  ["docview:cut"] = function()
-    cut_or_copy(true)
+  ["docview:cut"] = function(dv)
+    cut_or_copy(dv, true)
   end,
 
   ["docview:undo"] = function(dv)
@@ -383,8 +383,8 @@ local read_commands = {
     dv:set_selection(l1, c1)
   end,
 
-  ["docview:copy"] = function()
-    cut_or_copy(false)
+  ["docview:copy"] = function(dv)
+    cut_or_copy(dv, false)
   end,
 
   ["docview:select-all"] = function(dv)
@@ -423,7 +423,7 @@ local read_commands = {
       end
     end
 
-    core.command_view:enter("Go To Line", {
+    dv.root_view.command_view:enter("Go To Line", {
       submit = function(text, item)
         local line = item and item.line or tonumber(text)
         if not line then

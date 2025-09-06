@@ -370,7 +370,7 @@ function core.init()
   end
 
   for _, filename in ipairs(files) do
-    core.active_window():open_doc(core.open_doc(filename))
+    core.active_window().root_view:open_doc(core.open_doc(filename))
   end
 
   if not plugins_success then
