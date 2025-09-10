@@ -619,7 +619,7 @@ function TreeView:on_context_menu()
     { text = "New Folder", command = "treeview:new-folder" },
     { text = "Remove directory", command = "treeview:remove-project-directory" },
     { text = "Find in Directory", command = "treeview:search-in-directory" }
-  } }, self
+  } }
 end
 
 -- Register the TreeView commands and keymap
@@ -733,8 +733,9 @@ command.add(TreeView, {
 })
 
 
-command.add(function(view)
-  return view.item and view:item() ~= nil, view, view.item and view:item()
+command.add(function(root_view)
+  local view = root_view.active_view
+  return view:is(TreeView) and view.item and view:item() ~= nil, view, view.item and view:item()
 end, {
   ["treeview:delete"] = function(view, item)
     local filename = item.abs_filename

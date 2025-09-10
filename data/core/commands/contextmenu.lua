@@ -5,9 +5,9 @@ local ContextMenu = require "core.contextmenu"
 command.add(function(root_view, x, y)
   if not x and not y then x, y = root_view.mouse.x, root_view.mouse.y end
   local view = x and y and type(x) == 'number' and type(y) == 'number' and root_view.root_node:get_child_overlapping_point(x, y).active_view
-  if not view then return nil end
-  local results = { view:on_context_menu(x, y) }
-  return results and results[1] and #results[1] > 0, root_view, x, y, table.unpack(results)
+  local results = view and view:on_context_menu(x, y)
+  if not results then return nil end
+  return #results.items > 0, root_view, x, y, results.items
 end, {
   ['context-menu:show'] = function(root_view, x, y, items, ...)
     root_view.context_menu:show(x, y, items, ...)

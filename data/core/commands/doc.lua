@@ -69,7 +69,7 @@ local commands = {
     if dv.doc.filename then
       save()
     else
-      command.perform("doc:save-as")
+      command.perform("doc:save-as", dv.root_view)
     end
   end,
 

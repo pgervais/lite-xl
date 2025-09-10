@@ -1518,7 +1518,7 @@ function DocView:on_context_menu()
     ContextMenu.DIVIDER,
     { text = "Find",    command = "find-replace:find"    },
     { text = "Replace", command = "find-replace:replace" }
-  } }, self
+  } }
 end
 
 return DocView
