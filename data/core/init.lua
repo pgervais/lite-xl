@@ -79,10 +79,9 @@ end
 
 function core.open_project(project)
   local project = core.set_project(project)
-  for _, window in core.windows do
-    window:close_all_docviews()
+  for _, window in ipairs(core.windows) do
+    window.root_view:close_all_docviews()
   end
-  reload_customizations()
   update_recents_project("add", project.path)
   command.perform("core:restart")
 end
