@@ -30,23 +30,24 @@ lua_names = [
     'lua',    # Fedora
 ]
 
-if get_option('use_system_lua')
-    foreach lua : lua_names
-        last_lua = (lua == lua_names[-1] or get_option('wrap_mode') == 'forcefallback')
-        lua_dep = dependency(lua, required : false,
-        )
-        if lua_dep.found()
-            break
-        endif
 
-        if last_lua
-            # If we could not find lua on the system and fallbacks are disabled
-            # try the compiler as a last ditch effort, since Lua has no official
-            # pkg-config support.
-            lua_dep = cc.find_library('lua', required : true)
-        endif
-    endforeach
-else
+foreach lua : lua_names
+    last_lua = (lua == lua_names[-1] or get_option('wrap_mode') == 'forcefallback')
+    lua_dep = dependency(lua, required : false,
+    )
+    if lua_dep.found()
+        break
+    endif
+
+    if last_lua
+        # If we could not find lua on the system and fallbacks are disabled
+        # try the compiler as a last ditch effort, since Lua has no official
+        # pkg-config support.
+        lua_dep = cc.find_library('lua', required : false)
+    endif
+endforeach
+
+if not lua_dep.found()
     lua_dep = dependency('', fallback: ['lua', 'lua_dep'], required : true,
         default_options: default_fallback_options + ['default_library=static', 'line_editing=disabled', 'interpreter=false']
     )
