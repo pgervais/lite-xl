@@ -70,10 +70,10 @@ local function cut_or_copy(dv, delete)
   system.set_clipboard(full_text)
 end
 
-local function split_cursor(direction)
+local function split_cursor(dv, direction)
   local new_cursors = {}
-  for _, line1, col1 in docview():get_selections() do
-    if line1 + direction >= 1 and line1 + direction <= #doc().lines then
+  for _, line1, col1 in dv:get_selections() do
+    if line1 + direction >= 1 and line1 + direction <= #dv.doc.lines then
       table.insert(new_cursors, { line1 + direction, col1 })
     end
   end
@@ -84,7 +84,7 @@ local function split_cursor(direction)
   end
   for i = start, stop, direction do
     local v = new_cursors[i]
-    docview():add_selection(v[1], v[2])
+    dv:add_selection(v[1], v[2])
   end
   core.blink_reset()
 end
@@ -455,12 +455,12 @@ local read_commands = {
   end,
 
   ["docview:create-cursor-previous-line"] = function(dv)
-    split_cursor(-1)
+    split_cursor(dv, -1)
     dv:merge_cursors()
   end,
 
   ["docview:create-cursor-next-line"] = function(dv)
-    split_cursor(1)
+    split_cursor(dv, 1)
     dv:merge_cursors()
   end
 
