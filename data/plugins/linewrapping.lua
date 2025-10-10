@@ -173,9 +173,9 @@ command.add(nil, {
   end,
   ["line-wrapping:toggle"] = function(root_view)
     if root_view.active_view and root_view.active_view.doc and root_view.active_view.wrapping then
-      command.perform("line-wrapping:disable", root_view)
+      root_view:perform("line-wrapping:disable")
     else
-      command.perform("line-wrapping:enable", root_view)
+      root_view:perform("line-wrapping:enable")
     end
   end
 })

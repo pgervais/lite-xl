@@ -31,7 +31,7 @@ local function save(filename)
       if item.text == "Yes" then
         core.add_thread(function()
           -- we need to run this in a thread because of the odd way the nagview is.
-          command.perform("doc:save-as", core.active_window().root_view)
+          core.active_window().root_view:perform("doc:save-as")
         end)
       end
     end)
@@ -69,7 +69,7 @@ local commands = {
     if dv.doc.filename then
       save()
     else
-      command.perform("doc:save-as", dv.root_view)
+      dv:perform("doc:save-as")
     end
   end,
 

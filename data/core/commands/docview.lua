@@ -93,7 +93,7 @@ local function set_cursor(dv, x, y, snap_type)
   local line, col = dv:resolve_screen_position(x, y)
   dv:set_selection(line, col, line, col)
   if snap_type == "word" or snap_type == "lines" then
-    command.perform("docview:select-" .. snap_type, dv.root_view)
+    dv:perform("docview:select-" .. snap_type)
   end
   dv.mouse_selecting = { line, col, snap_type }
   core.blink_reset()
@@ -329,7 +329,7 @@ local write_commands = {
       local comment = current_syntax.block_comment
       if not comment then
         if dv.doc.syntax.comment then
-          command.perform "doc:toggle-line-comments"
+          dv:perform("doc:toggle-line-comments")
         end
         return
       end
