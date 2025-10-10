@@ -447,7 +447,8 @@ local read_commands = {
     core.blink_reset() -- to show the cursor has changed edit modes
   end,
 
-  ["docview:select-to-cursor"] = function(dv, x, y, clicks)
+  ["docview:select-to-cursor"] = function(dv, options)
+    local x, y = options.x, options.y
     local line1, col1 = select(3, dv:get_selection())
     local line2, col2 = dv:resolve_screen_position(x, y)
     dv.mouse_selecting = { line1, col1, nil }
@@ -466,7 +467,8 @@ local read_commands = {
 
 }
 
-command.add(function(rv, x, y)
+command.add(function(rv, options)
+  local x, y = options.x, options.y
   if x == nil or y == nil or not rv.active_view:extends(DocView) then return false end
   local dv = rv.active_view
   local x1,y1,x2,y2 = dv.position.x, dv.position.y, dv.position.x + dv.size.x, dv.position.y + dv.size.y
