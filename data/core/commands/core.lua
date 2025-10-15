@@ -211,7 +211,7 @@ command.add(nil, {
           core.error("Directory %q is currently opened", abs_path)
           return
         end
-        system.exec(string.format("%q %q", EXEFILE, abs_path))
+        process.start({ EXEFILE, abs_path }, { detach = true })
       end,
       suggest = suggest_directory
     })

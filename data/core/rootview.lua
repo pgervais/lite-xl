@@ -457,7 +457,7 @@ function RootView:on_file_dropped(filename, x, y)
           if opt.text == "Current window" then
             core.add_project(abspath)
           elseif opt.text == "New window" then
-            system.exec(string.format("%q %q", EXEFILE, filename))
+            process.start({ EXEFILE, filename }, { detach = true })
           end
         end
       )
@@ -469,8 +469,8 @@ function RootView:on_file_dropped(filename, x, y)
     -- We need to change the current project folder for the first request, and start
     -- new instances for the rest to emulate existing behavior.
     if self.first_dnd_processed then
-      -- FIXME: port to process API
-      system.exec(string.format("%q %q", EXEFILE, filename))
+      -- first update done, open in new window
+      process.start({ EXEFILE, filename }, { detach = true })
     else
       -- change project directory
       core.confirm_close_docs(core.docs, function(dirpath)
