@@ -215,7 +215,7 @@ function ResultsView:draw()
 
   -- results
   local _, _, bw = self:get_content_bounds()
-  core.push_clip_rect(ox, oy+yoffset + style.divider_size, bw, self.size.y-yoffset)
+  self.root_view.window:push_clip_rect(ox, oy+yoffset + style.divider_size, bw, self.size.y-yoffset)
   local y1, y2 = self.position.y, self.position.y + self.size.y
   for i, item, x,y,w,h in self:each_visible_result() do
     local color = style.text
@@ -229,7 +229,7 @@ function ResultsView:draw()
     x = common.draw_text(style.code_font, color, item.text, "left", x, y, w, h)
     self.max_h_scroll = math.max(self.max_h_scroll, x)
   end
-  core.pop_clip_rect()
+  self.root_view.window:pop_clip_rect()
 
   self:draw_scrollbar()
 end
@@ -317,7 +317,7 @@ command.add(nil, {
       text = get_selected_text(),
       select_text = true,
       submit = function(text)
-        projectsearch.search_plain(text, path, true)
+        projectsearch.search_plain(text, options.path, true)
       end
     })
   end,
@@ -325,7 +325,7 @@ command.add(nil, {
   ["project-search:find-regex"] = function(root_view, options)
     root_view.command_view:enter("Find Regex In " .. (options.path or "Project"), {
       submit = function(text)
-        projectsearch.search_regex(text, path, true)
+        projectsearch.search_regex(text, options.path, true)
       end
     })
   end,
@@ -335,7 +335,7 @@ command.add(nil, {
       text = get_selected_text(),
       select_text = true,
       submit = function(text)
-        projectsearch.search_fuzzy(text, path, true)
+        projectsearch.search_fuzzy(text, options.path, true)
       end
     })
   end,
